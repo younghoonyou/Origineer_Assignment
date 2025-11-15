@@ -1,0 +1,24 @@
+{
+  "name": "origineer",
+  "version": "1.0.0",
+  "description": "Origineer backend",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --project tsconfig.json --respawn --transpile-only index.ts",
+    "test": ""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.10.1",
+    "express": "^5.1.0",
+    "jest": "^30.2.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsc-alias": "^1.8.16",
+    "typescript": "^5.9.3"
+  }
+}
