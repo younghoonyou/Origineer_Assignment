@@ -1,0 +1,17 @@
+{
+  "items": [
+    {
+      "itemId": "A100",
+      "description": "Coffee Latte",
+      "price": 4.5,
+      "qty": 2
+    },
+    {
+      "itemId": "B200",
+      "description": "Blueberry Muffin",
+      "price": 3.25,
+      "qty": 1
+    }
+  ],
+  "method": "CASH"
+}
