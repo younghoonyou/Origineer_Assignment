@@ -31,28 +31,6 @@ export class LedgerStateMachine {
         if (tr.subtotalBeforeTax < 0)
           throw new Error('Invalid transaction price');
 
-        if (tr.type === 'REFUND') {
-          if (!tr.parentTransactionId)
-            throw new Error('Invalid parent transaction id');
-
-          const parent_tr = this.transactions.get(tr.parentTransactionId);
-
-          if (
-            !parent_tr?.trnx.items ||
-            !parent_tr?.trnx.subtotalBeforeTax ||
-            !parent_tr?.trnx.roundedCashAmount ||
-            !parent_tr?.trnx.paymentMethod ||
-            !parent_tr?.trnx.roundingDifference
-          )
-            throw new Error('Not found parent transaction');
-
-          tr.items = parent_tr?.trnx.items;
-          tr.subtotalBeforeTax = parent_tr?.trnx.subtotalBeforeTax;
-          tr.totalBeforeRounding = parent_tr?.trnx.roundedCashAmount;
-          tr.paymentMethod = parent_tr?.trnx.paymentMethod;
-          tr.roundingDifference = parent_tr?.trnx.roundingDifference;
-        }
-
         this.transactions.set(tr.id, { trnx: tr, ledger: [] });
       },
 
@@ -68,7 +46,9 @@ export class LedgerStateMachine {
 
         tr.roundedCashAmount = roundCash(tr.totalBeforeRounding);
         tr.roundingDifference =
-          roundCash(tr.totalBeforeRounding) - tr.totalBeforeRounding;
+          Math.round(
+            (tr.totalBeforeRounding - roundCash(tr.totalBeforeRounding)) * 100
+          ) / 100;
       },
 
       CALCULATE_TOTALS: (tr: Transaction) => {
@@ -84,7 +64,7 @@ export class LedgerStateMachine {
 
         if (
           tr.totalBeforeRounding !==
-          tr.roundedCashAmount + tr.roundingDifference
+          Math.round((tr.roundedCashAmount + tr.roundingDifference) * 100) / 100
         )
           throw new Error('Invalidate transaction');
 
@@ -128,17 +108,17 @@ export class LedgerStateMachine {
 
         tr.postedAt = new Date().toISOString().split('T')[0];
         tr.state = 'POSTED';
+        tr.totalBeforeRounding = sales_ledger_amount;
+        tr.roundedCashAmount = cashDrawer_ledger_amount;
+        tr.subtotalBeforeTax = sales_ledger_amount;
       },
 
       CANCEL: (id: string) => {
-        if (this.transactions.get(id))
-          throw new Error('Fail to find transaction');
         const tr: Transaction = this.transactions.get(id)?.trnx!;
+        if (this.transactions.get(id)) this.transactions.delete(id);
 
         if (tr.state === 'POSTED' || tr.state === 'CANCELLED')
           throw new Error('Invalid transaction state');
-
-        if (this.transactions.get(tr.id)) this.transactions.delete(tr.id);
       },
     };
   }
@@ -185,20 +165,24 @@ export class LedgerStateMachine {
     }
 
     const netSystemAmount =
-      totalSalesBeforeRounding - totalRefundsBeforeRounding;
-
-    const roundedTotalSalesBeforeRounding = roundCash(totalSalesBeforeRounding);
-    const roundedTotalRefundsBeforeRounding = roundCash(
-      totalRefundsBeforeRounding
-    );
+      Math.round(
+        (totalSalesBeforeRounding + totalRefundsBeforeRounding) * 100
+      ) / 100;
 
     const saleRoundingDifferenceTotal =
-      totalSalesBeforeRounding - roundedTotalSalesBeforeRounding;
+      Math.round(
+        (totalSalesBeforeRounding - roundCash(totalSalesBeforeRounding)) * 100
+      ) / 100;
     const refundRoundingDifferenceTotal =
-      totalRefundsBeforeRounding - roundedTotalRefundsBeforeRounding;
+      Math.round(
+        (totalRefundsBeforeRounding - roundCash(totalRefundsBeforeRounding)) *
+          100
+      ) / 100;
 
     const totalRoundingImpact =
-      saleRoundingDifferenceTotal + refundRoundingDifferenceTotal;
+      Math.round(
+        (saleRoundingDifferenceTotal + refundRoundingDifferenceTotal) * 100
+      ) / 100;
 
     const dailySummary: DailySummary = {
       date,
@@ -209,7 +193,8 @@ export class LedgerStateMachine {
       saleRoundingDifferenceTotal,
       refundRoundingDifferenceTotal,
       totalRoundingImpact,
-      expectedCashInDrawerChange: netSystemAmount + totalRoundingImpact,
+      expectedCashInDrawerChange:
+        Math.round((netSystemAmount + totalRoundingImpact) * 100) / 100,
     };
 
     return dailySummary;
