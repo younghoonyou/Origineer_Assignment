@@ -24,9 +24,10 @@
       "services/*": ["services/*"],
       "types/*": ["types/*"],
       "utils/*": ["utils/*"],
-      "database/*": ["database/*"]
+      "database/*": ["database/*"],
+      "test/*": ["test/*"]
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "test", "**/*.test.ts"]
 }
