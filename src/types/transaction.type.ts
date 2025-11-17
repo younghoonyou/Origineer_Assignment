@@ -1,12 +1,13 @@
-type TransactionType = 'SALE' | 'REFUND';
-type TransactionState = 'DRAFT' | 'CALCULATED' | 'POSTED' | 'CANCELLED';
-interface LineItem {
+export type TransactionType = 'SALE' | 'REFUND';
+export type TransactionState = 'DRAFT' | 'CALCULATED' | 'POSTED' | 'CANCELLED';
+export interface LineItem {
   itemId: string;
   description: string;
   price: number; // before tax, per unit
   qty: number;
 }
-interface Transaction {
+
+export interface Transaction {
   id: string;
   type: TransactionType;
   state: TransactionState;
